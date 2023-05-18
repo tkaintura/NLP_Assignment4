@@ -72,8 +72,16 @@ class ParserModel(nn.Module):
         ### 
         ### See the PDF for hints.
 
+        # Declare embed_to_hidden_weight and embed_to_hidden_bias as nn.Parameter
+        self.embed_to_hidden_weight = nn.Parameter(nn.init.xavier_uniform_(torch.empty(self.n_features * self.embed_size, self.hidden_size)))
+        self.embed_to_hidden_bias = nn.Parameter(nn.init.uniform_(torch.empty(self.hidden_size)))
 
+        # Construct dropout layer
+        self.dropout = nn.Dropout(self.dropout_prob)
 
+        # Declare hidden_to_logits_weight and hidden_to_logits_bias as nn.Parameter
+        self.hidden_to_logits_weight = nn.Parameter(nn.init.xavier_uniform_(torch.empty(self.hidden_size, self.n_classes))) 
+        self.hidden_to_logits_bias = nn.Parameter(nn.init.uniform_(torch.empty(self.n_classes)))
 
         ### END YOUR CODE
 
@@ -106,8 +114,13 @@ class ParserModel(nn.Module):
         ###     View: https://pytorch.org/docs/stable/tensors.html#torch.Tensor.view
         ###     Flatten: https://pytorch.org/docs/stable/generated/torch.flatten.html
 
+        print(w.shape())
+        # For each index `i` in `w`, select the `i`th vector from self.embeddings
+        x = torch.index_select(self.embeddings, 0, w) 
 
-
+        # Reshape the tensor using `view` function if necessary
+        x = x.view(w.size(0), -1)
+        print(x.shape())
         ### END YOUR CODE
         return x
 
@@ -143,6 +156,14 @@ class ParserModel(nn.Module):
         ###     Matrix product: https://pytorch.org/docs/stable/torch.html#torch.matmul
         ###     ReLU: https://pytorch.org/docs/stable/nn.html?highlight=relu#torch.nn.functional.relu
 
+        # Perform embedding lookup
+        x = self.embedding_lookup(w)
+        # Apply linear transformation to hidden layer
+        hidden = F.relu(torch.matmul(x, self.embed_to_hidden_weight) + self.embed_to_hidden_bias) 
+        # Apply dropout
+        hidden_dropout = self.dropout(hidden)
+        # Apply linear transformation to logits
+        logits = torch.matmul(hidden_dropout, self.hidden_to_logits_weight) + self.hidden_to_logits_bias 
 
         ### END YOUR CODE
         return logits
