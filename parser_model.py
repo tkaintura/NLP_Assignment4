@@ -114,13 +114,11 @@ class ParserModel(nn.Module):
         ###     View: https://pytorch.org/docs/stable/tensors.html#torch.Tensor.view
         ###     Flatten: https://pytorch.org/docs/stable/generated/torch.flatten.html
 
-        print(w.shape())
         # For each index `i` in `w`, select the `i`th vector from self.embeddings
-        x = torch.index_select(self.embeddings, 0, w) 
+        x = torch.index_select(self.embeddings, 0, w.flatten()) 
 
         # Reshape the tensor using `view` function if necessary
         x = x.view(w.size(0), -1)
-        print(x.shape())
         ### END YOUR CODE
         return x
 
@@ -180,12 +178,14 @@ if __name__ == "__main__":
     model = ParserModel(embeddings)
 
     def check_embedding():
+        print("check_embedding")
         inds = torch.randint(0, 100, (4, 36), dtype=torch.long)
         selected = model.embedding_lookup(inds)
         assert np.all(selected.data.numpy() == 0), "The result of embedding lookup: " \
                                       + repr(selected) + " contains non-zero elements."
 
     def check_forward():
+        print("check_forward")
         inputs =torch.randint(0, 100, (4, 36), dtype=torch.long)
         out = model(inputs)
         expected_out_shape = (4, 3)
