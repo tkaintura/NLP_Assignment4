@@ -32,6 +32,9 @@ class PartialParse(object):
         ### Note: If you need to use the sentence object to initialize anything, make sure to not directly 
         ###       reference the sentence object.  That is, remember to NOT modify the sentence object. 
 
+        self.stack = ["ROOT"]
+        self.buffer = self.sentence.copy()
+        self.dependencies = []
 
         ### END YOUR CODE
 
@@ -50,7 +53,16 @@ class PartialParse(object):
         ###         1. Shift
         ###         2. Left Arc
         ###         3. Right Arc
-
+        if transition == "S":
+            self.stack.append(self.buffer.pop(0))
+        elif transition == "LA":
+            head = self.stack[-1]
+            dependent = self.stack.pop(-2)
+            self.dependencies.append((head, dependent))
+        elif transition == "RA":
+            dependent = self.stack.pop()
+            head = self.stack[-1]
+            self.dependencies.append((head, dependent))
 
         ### END YOUR CODE
 
@@ -102,7 +114,18 @@ def minibatch_parse(sentences, model, batch_size):
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
 
+    partial_parses = [PartialParse(sentence) for sentence in sentences]
+    unfinished_parses = partial_parses[:]
+    while unfinished_parses:
+        batch = unfinished_parses[:batch_size]
+        transitions = model.predict(batch)
+        for partial_parse, transition in zip(batch, transitions):
+            partial_parse.parse_step(transition)
+            # Remove the completed (empty buffer and stack of size 1) parses from unfinished_parses
+            if not partial_parse.buffer and len(partial_parse.stack) == 1:
+                unfinished_parses.remove(partial_parse)
 
+    dependencies = [parse.dependencies for parse in partial_parses]
     ### END YOUR CODE
 
     return dependencies
