@@ -109,7 +109,7 @@ def train_for_epoch(parser, train_data, dev_data, optimizer, loss_func, batch_si
             ###     Optimizer Step: https://pytorch.org/docs/stable/optim.html#optimizer-step
 
             # Forward pass
-            logits = parser.model.forward(train_x)
+            logits = parser.model(train_x)
             # Compute loss
             loss = loss_func(logits, train_y)
             # Backward pass
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    train(parser, train_data, dev_data, output_path, batch_size=1024, n_epochs=10, lr=0.0005)
+    train(parser, train_data, dev_data, output_path, batch_size=1024, n_epochs=20, lr=0.0003) #batch_size=1024, n_epochs=10, lr=0.0005
 
     if not debug:
         print(80 * "=")
